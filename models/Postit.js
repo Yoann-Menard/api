@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const memoSchema = new mongoose.Schema({
+const postitSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
@@ -15,4 +15,4 @@ const memoSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Memo', memoSchema);
+module.exports = mongoose.model('Postit', postitSchema);
