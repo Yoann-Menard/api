@@ -6,15 +6,6 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
-app.use(
-  express.urlencoded({
-    extended: true,
-  }),
-);
-
 // Importation des Routes
 const userRoute = require('./routes/user');
 const memoRoute = require('./routes/memo');
@@ -33,11 +24,20 @@ app.get('/', (req, res) => {
 // Connexion à la Base de donnée
 mongoose.connect(
   process.env.DB_CONNECT,
-  { useNewUrlParser: true, useUnifiedTopology: true },
+  { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true },
   () => console.log('Connexion à la base de données effectuée'),
 );
 
+// Middlewares
+app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
+app.use(cors());
+
 // Lancement de l'application sur le port 3000
 app.listen(3000, () =>
-  console.log('l\'application est disponible sur le port 3000 !'),
+  console.log("l'application est disponible sur le port 3000 !"),
 );
