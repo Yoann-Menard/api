@@ -1,8 +1,10 @@
 const router = require('express').Router();
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const { registerValidation } = require('../validation');
+const bodyParser = require('body-parser');
+// const jwt = require('jsonwebtoken');
+// const bcrypt = require('bcryptjs');
+const Joi = require('@hapi/joi');
+// const { registerValidation } = require('../validation');
 
 // Récupère tous les users jusqu'à 15 maximum
 router.get('/', async (req, res) => {
@@ -30,20 +32,44 @@ router.get('/', async (req, res) => {
 //   }
 // });
 
-router.post('/register', async (req, res) => {
-  const { error } = registerValidation(req.body);
 
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  } else {
-    console.log('data is being sent to mongoDB database...');
-    User.create({
-      name: req.body?.name,
-      email: req.body?.email,
-      password: req.body?.password,
-      presentation: req.body?.presentation,
-    }).then((user) => res.json(user));
-  }
+// create application/json parser
+const jsonParser = bodyParser.json()
+
+// create application/x-www-form-urlencoded parser
+const urlencodedParser = bodyParser.urlencoded({ extended: false })
+
+//Validation
+const schema = Joi.object().keys({
+    name: Joi.string().min(6).required,
+    email: Joi.string().min(6).email().required,
+    password: Joi.string().min(8).required,
+    presentation: Joi.string().min(8).required
+});
+
+router.post('/register', urlencodedParser, async (req, res) => {
+   try {
+        const value = await schema.validateAsync({name: req.body?.name, email: req.body?.email, password: req.body?.password, presentation: req.body?.presentation});
+        console.log(value);
+    } catch (err) {
+        console.log(err);
+    }
+
+    //  const {error} = schema.validate({name: req.body.name, email: req.body.email, password: req.body.password, presentation: req.body?.presentation});
+    //  console.log(error);
+    const user = new User({
+        name: req.body?.name,
+        email: req.body?.email,
+        password: req.body?.password,
+        presentation: req.body?.presentation
+    });
+
+    try {
+        const savedUser = await user.save();
+        res.send(savedUser);
+    } catch (error) {
+        res.send(error);
+    };
 });
 
 // router.post('/login', async (req, res) => {
