@@ -11,6 +11,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+
 // Envoie un postit champs nécessaire avant l'envoie: title, description
 router.post('/', async (req, res) => {
   const postit = new Postit({
@@ -36,16 +37,6 @@ router.get('/:postitId', async (req, res) => {
   }
 });
 
-// Efface un Postit
-router.delete('/:postitId', async (req, res) => {
-  try {
-    const removedPostit = await Postit.remove({ _id: req.params.postitId });
-    res.json(removedPostit);
-  } catch (err) {
-    res.json({ message: err });
-  }
-});
-
 // Edite un Postit
 router.patch('/:postitId', async (req, res) => {
   try {
@@ -58,5 +49,16 @@ router.patch('/:postitId', async (req, res) => {
     res.json({ message: err });
   }
 });
+
+// Efface un Postit
+router.delete('/:postitId', async (req, res) => {
+  try {
+    const removedPostit = await Postit.remove({ _id: req.params.postitId });
+    res.json(removedPostit);
+  } catch (err) {
+    res.json({ message: err });
+  }
+});
+
 
 module.exports = router;

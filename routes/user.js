@@ -1,10 +1,11 @@
+const express = require('express');
 const router = require('express').Router();
 const User = require('../models/User');
-const bodyParser = require('body-parser');
-// const jwt = require('jsonwebtoken');
-// const bcrypt = require('bcryptjs');
-const Joi = require('@hapi/joi');
-// const { registerValidation } = require('../validation');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { registerValidation, loginValidation } = require('../validation');
+const passport = require('passport');
+const passwordUtils = require('../lib/passwordUtils');
 
 // Récupère tous les users jusqu'à 15 maximum
 router.get('/', async (req, res) => {
@@ -16,67 +17,48 @@ router.get('/', async (req, res) => {
   }
 });
 
-// router.post('/register', async (req, res) => {
-  //   const user = new User({
-  //     name: req.body?.name,
-  //     email: req.body?.email,
-  //     password: req.body?.password,
-  //     presentation: req.body?.presentation,
-//   });
+router.post('/register', async (req, res) => {
+  const { error } = registerValidation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-//   try {
-//     const savedUser = await user.save();
-//     res.json(savedUser);
-//   } catch (err) {
-//     res.json({ message: err });
-//   }
-// });
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
+  const user = new User({
+    name: req.body?.name,
+    email: req.body?.email,
+    password: hashedPassword,
+    presentation: req.body?.presentation,
+  });
 
-// create application/json parser
-const jsonParser = bodyParser.json()
-
-// create application/x-www-form-urlencoded parser
-const urlencodedParser = bodyParser.urlencoded({ extended: false })
-
-//Validation
-const schema = Joi.object().keys({
-    name: Joi.string().min(6).required,
-    email: Joi.string().min(6).email().required,
-    password: Joi.string().min(8).required,
-    presentation: Joi.string().min(8).required
+  try {
+    const savedUser = await user.save();
+    res.json(savedUser);
+  } catch (err) {
+    res.json({ message: err });
+  }
 });
 
-router.post('/register', urlencodedParser, async (req, res) => {
-   try {
-        const value = await schema.validateAsync({name: req.body?.name, email: req.body?.email, password: req.body?.password, presentation: req.body?.presentation});
-        console.log(value);
-    } catch (err) {
-        console.log(err);
-    }
+router.post('/login', async (req, res) => {
+  passport.authenticate('jwt', { session: false });
+  const { error } = loginValidation(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
 
-    //  const {error} = schema.validate({name: req.body.name, email: req.body.email, password: req.body.password, presentation: req.body?.presentation});
-    //  console.log(error);
-    const user = new User({
-        name: req.body?.name,
-        email: req.body?.email,
-        password: req.body?.password,
-        presentation: req.body?.presentation
-    });
+  let user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return res.status(400).send('Incorrect email or password.');
+  }
 
-    try {
-        const savedUser = await user.save();
-        res.send(savedUser);
-    } catch (error) {
-        res.send(error);
-    };
+  const validPassword = await bcrypt.compare(req.body.password, user.password);
+  if (!validPassword) {
+    return res.status(400).send('Incorrect email or password.');
+  }
+
+  const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET);
+  res.header('auth-token', token).send(token);
 });
-
-// router.post('/login', async (req, res) => {
-//   // Crée et assigne un token
-//   const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET);
-//   res.header('auth-token', token).send(token);
-// });
 
 // Trouve un utilisateur spécifique
 router.get('/:userId', async (req, res) => {
@@ -88,17 +70,7 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-// Efface un Utilisateur
-router.delete('/:userId', async (req, res) => {
-  try {
-    const removedUser = await User.remove({ _id: req.params.userId });
-    res.json(removedUser);
-  } catch (err) {
-    res.json({ message: err });
-  }
-});
-
-// Edite un User
+// Edite un Utilisateur
 router.patch('/:userId', async (req, res) => {
   try {
     const updatedUser = await User.updateOne(
@@ -118,7 +90,14 @@ router.patch('/:userId', async (req, res) => {
   }
 });
 
-function loginValidation(body) {
-  throw new Error('Function not implemented.');
-}
+// Efface un Utilisateur
+router.delete('/:userId', async (req, res) => {
+  try {
+    const removedUser = await User.deleteOne({ _id: req.params.userId });
+    res.json(removedUser);
+  } catch (err) {
+    res.json({ message: err });
+  }
+});
+
 module.exports = router;
