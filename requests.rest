@@ -1,0 +1,28 @@
+GET http://localhost:3000/user
+
+###
+
+POST http://localhost:3000/user/register
+Content-Type: application/json
+
+{
+    "name": "Yoann1999",
+    "email": "Yoann@menard.fr",
+    "password": "yoannpassword"
+}
+
+###
+
+PATCH http://localhost:3000/user/
+Content-Type: application/json
+
+{
+    "name": "Sujet de test n°4",
+    "email": "test4@test.fr",
+    "password": "motdepassetest4",
+    "presentation": "Je suis le sujet de test n°4"
+}
+
+###
+
+DELETE http://localhost:3000/user/

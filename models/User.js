@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
+    hash: String,
+    salt: String,
     required: true,
     min: 6,
     max: 255,
