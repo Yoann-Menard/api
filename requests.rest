@@ -6,6 +6,7 @@ POST http://localhost:3000/user/register
 Content-Type: application/json
 
 {
+<<<<<<< HEAD
     "name": "Yoann1999",
     "email": "Yoann@menard.fr",
     "password": "yoannpassword"
@@ -26,3 +27,9 @@ Content-Type: application/json
 ###
 
 DELETE http://localhost:3000/user/
+=======
+    "name": "test36831324",
+    "password": "test3password",
+    "email": "test3@test3.com"
+}
+>>>>>>> eab347e8345b7c293c5a302f9fba3235acda76ac
